@@ -20,7 +20,7 @@ import logging
 import itertools
 import argparse
 
-np.set_printoptions(threshold=sys.maxsize)
+# np.set_printoptions(threshold=sys.maxsize)
 
 # for numexpr package missing and no permissions to install:
 # clone package, copy to hpc, build with $ python setup.py build, copy numexpr folder from build/lib.linux-ppc64le-3.6 to project root
@@ -58,10 +58,15 @@ class TVB_test:
 		# populations = models.Kuramoto()
 		switcher = {
 			'Kuramoto': models.Kuramoto,
+			'KuramotoT': models.KuramotoT,
 			'ReducedWongWang': models.ReducedWongWang,
+			'ReducedWongWangT': models.ReducedWongWangT,
 			'Generic2dOscillator': models.Generic2dOscillator,
+			'Generic2dOscillatorT': models.Generic2dOscillatorT,
 			'Epileptor': models.Epileptor,
-			'Montbrio': models.Theta2D
+			'EpileptorT': models.EpileptorT,
+			'Montbrio': models.Theta2D,
+			'MontbrioT': models.Theta2DT
 		}
 		func = switcher.get(pop, 'invalid model choice')
 		# logger.info('func %s', func)
@@ -126,15 +131,16 @@ class TVB_test:
 
 	def plot_SC_FC(self, SC, FC, tag):
 		fig, ax = plt.subplots(ncols=2, figsize=(12, 3))
-		sns.heatmap((FCloc), xticklabels='',
+		sns.heatmap((FC), xticklabels='',
 					yticklabels='', ax=ax[0],
 					cmap='coolwarm')
 		sns.heatmap(SC / SC.max(), xticklabels='', yticklabels='',
 					ax=ax[1], cmap='coolwarm', vmin=0, vmax=1) #
-		r = correlation_SC_FC(SC, FCloc)
+		r = self.correlation_SC_FC(SC, FC)
 		ax[0].set_title('simulated FC. \n(SC-FC r = %1.4s )' % r)
 		ax[1].set_title('SC')
-		plt.savefig("FC_SC_" + str(g) + "_" + str(s) + tag + ".png")
+		# plt.savefig("FC_SC_" + tag + ".png")
+		# plt.draw()
 		return r
 
 	# Todo: check if this function work. derr_speed > 500 and derr_coupl < -1500 evaluate to false for pyCuda runs
@@ -175,14 +181,13 @@ class TVB_test:
 		sim = simulator.Simulator(model=model, connectivity=self.connectivity, coupling=self.coupling, integrator=self.integrator,
 									  monitors=[monitorsen])
 		sim.configure()
-		tavg_data = sim.run(simulation_length=self.sim_length)
-
-		# from regular_run import regularRun
-		# regularrun = regularRun()
-		# tavg_data = regularrun.simulate_python(logger, args, model, connectivity, coupling, integrator)
-		# FC = tvbhpc.calculate_FC(np.squeeze(tavg_data))
-		# r = tvbhpc.plot_SC_FC(SC, FC,"numbacuda")
-		# print(FC)
+		(_,tavg_data) = sim.run(simulation_length=self.sim_length)[0]
+		# print(np.squeeze(np.array(tavg_data)).shape)
+		#
+		# FC = self.calculate_FC(np.squeeze(np.array(tavg_data)))
+		# r = self.plot_SC_FC(self.SC, FC,"regular")
+		# print(r)
+		return np.squeeze(tavg_data)
 
 	def numba(self):
 		logger.info('start Numba run')
@@ -220,17 +225,7 @@ class TVB_test:
 		# Todo: fix this for cuda
 		# tvbhpc.check_results(n_nodes, n_work_items, tavg_data, weights, speeds, couplings, logger, args)
 
-	def testcon(self):
-		logger.info('print some stuff')
-		logger.info('connectivity %s', (self.connectivity.tract_lengths.shape))
-		# logger.info('connectivity.speed %s', (tvbhpc.connectivity.speed))
-		# logger.info('coupling %s', couplings)
-		logger.info('connectivity.speed %s', speeds.shape)
-		logger.info('params %s', params.T.shape)
-
 	def startsim(self, pop):
-
-# if __name__ == '__main__':
 
 		tic = time.time()
 		tvbhpc = TVB_test()
@@ -303,7 +298,17 @@ class TVB_test:
 		}
 		func = switcher.get(benchwhat, 'invalid bench choice')
 		logger.info('func %s', func)
-		func(logger, pop)
+		# quick and dirty comparison between old and templated version
+		for k in range(2):
+			if k == 0:
+				tavg0 = func(logger, pop)
+			if k == 1:
+				pop = pop + 'T'
+				tavg1 = func(logger, pop)
+
+		# print('coercoef=', corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1])
+		print('tavg0', tavg0, '\ntavg1', tavg1)
+
 
 		toc = time.time()
 		print("Finished python simulation successfully in: {}".format(toc - tac))

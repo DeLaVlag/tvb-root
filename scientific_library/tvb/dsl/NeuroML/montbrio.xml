@@ -42,7 +42,7 @@
 
         <!-- Exposures are used for observables, for the name enter variable to be observed (usually states)
         and for dimension enter the reduction functionality-->
-        <Exposure name="r" choices="r, V" default="r, V" description="The quantities of interest for monitoring for the Infinite QIF 2D oscillator."/>
+        <Exposure name="r" choices="r, V" default="r" description="The quantities of interest for monitoring for the Infinite QIF 2D oscillator."/>
 
     </ComponentType>
 </Lems>

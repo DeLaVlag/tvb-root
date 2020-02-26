@@ -47,7 +47,7 @@ def drift_templating(target):
     fp_xml = 'NeuroML/' + filename.lower() + '.xml'
     # modelfile="../models/python/" + modelname + ".py"
     # place results directly into tvb model directory
-    modelfile = "../simulator/models/" + filename.lower() + ".py"
+    modelfile = "../simulator/models/" + filename.lower() + "T.py"
 
     model = Model()
     model.import_from_file(fp_xml)
