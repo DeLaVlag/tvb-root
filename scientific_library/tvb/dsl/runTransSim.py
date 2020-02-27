@@ -6,20 +6,32 @@ import LEMS2python as templating
 import TVB_testsuite.tvbRegCudaNumba as TemplSim
 import matplotlib.pyplot as plt
 import time
+from numpy import corrcoef
 
-# # options for target:
-# Kuramoto
-# ReducedWongWang
-# Generic2dOscillator
-# Epileptor
-# Montbrio
+# # options for target: 	coercoeff with itself:		coercoef with templated version:
+# Kuramoto					0.9999						0.9285
+# ReducedWongWang			0.3366						0.3366
+# Generic2dOscillator		0.4573						0.4573
+# Epileptor					0.8062						0.4832
+# Montbrio					NaN
 
-target="Kuramoto"
+target="ReducedWongWang"
 # make a model template
-# templating.drift_templating(target)
+templating.drift_templating(target)
 # run tvb with model template
 testTemplSim = TemplSim.TVB_test()
-testTemplSim.startsim(target)
+tavg0=testTemplSim.startsim(target)
+del(testTemplSim)
+
+import TVB_testsuite.tvbRegCudaNumba as TemplSim2
+
+testTemplSim2 = TemplSim2.TVB_test()
+tavg1=testTemplSim2.startsim(target)
+
+comparison = tavg0.ravel()==tavg1.ravel()
+print(comparison.all())
+# print('coercoef=', corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1])
+print('coercoef=', corrcoef(tavg0.ravel())[0, 1])
 
 # target="KuramotoT"
 # # make a model template

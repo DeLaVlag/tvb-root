@@ -64,6 +64,7 @@ def drift_templating(target):
             svboundaries = 1
             continue
 
+    modelname = modelname + 'T'
     # start templating
     template = Template(filename='tmpl8_drift.py')
     model_str = template.render(

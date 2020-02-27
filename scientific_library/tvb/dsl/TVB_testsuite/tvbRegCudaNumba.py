@@ -299,15 +299,19 @@ class TVB_test:
 		func = switcher.get(benchwhat, 'invalid bench choice')
 		logger.info('func %s', func)
 		# quick and dirty comparison between old and templated version
-		for k in range(2):
-			if k == 0:
-				tavg0 = func(logger, pop)
-			if k == 1:
-				pop = pop + 'T'
-				tavg1 = func(logger, pop)
+		# for k in range(2):
+		# 	if k == 0:
+		# 		# pop = pop + 'T'
+		# 		print(pop)
+		# 		tavg0 = func(logger, pop)
+		# 	if k == 1:
+		# 		pop = pop + 'T'
+		# 		print(pop)
+		# 		tavg1 = func(logger, pop)
+		# 		print('coercoef=', corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1])
 
-		# print('coercoef=', corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1])
-		print('tavg0', tavg0, '\ntavg1', tavg1)
+		tavg = func(logger, pop)
+		# print('tavg0', tavg0.shape, '\ntavg1', tavg1.shape)
 
 
 		toc = time.time()
@@ -317,6 +321,8 @@ class TVB_test:
 		logger.info('elapsed time %0.3f', elapsed)
 		logger.info('%0.3f M step/s', 1e-6 * nstep * n_inner_steps * n_work_items / elapsed)
 		logger.info('finished')
+
+		return tavg
 
 if __name__ == '__main__':
 	zelf = TVB_test()

@@ -80,7 +80,7 @@
         and for dimension enter the reduction functionality. Will be represented as variables_of_interest.
         Choices and default list with a (,) seperator
         For a FC SC comparison the default option can only be 1. Return matrix will become to dimensional-->
-        <Exposure name="x1" default="x1" choices="x1, y1, z, x2, y2, g, x2 - x1" description="Quantities of the Epileptor available to monitor."/>
+        <Exposure name="x1" default="x2 - x1, z" choices="x1, y1, z, x2, y2, g, x2 - x1" description="Quantities of the Epileptor available to monitor."/>
 
     </ComponentType>
 </Lems>
