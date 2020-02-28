@@ -35,14 +35,14 @@
 
             <!-- For conditionals use &lt(=); or &gt;(=) for less- or greater then (equal to)  -->
             <!-- Conditional now used for if statement using ternary operator: syntax: [on_true:exposure] if [expression:name] else [on_false:dimension] -->
-            <TimeDerivative name="dx" expression="Delta / 3.14 + 2 * V * r - k * r**2 + Gamma * r / 3.14"/>
-            <TimeDerivative name="dy" expression="V**2 - 3.14**2 * r**2 + eta + (k * s + J) * r - k * V * r + gamma * I + Coupling_Term"/>
+            <TimeDerivative name="dx" expression="Delta / pi + 2 * V * r - k * r**2 + Gamma * r / pi"/>
+            <TimeDerivative name="dy" expression="V**2 - pi**2 * r**2 + eta + (k * s + J) * r - k * V * r + gamma * I + Coupling_Term"/>
 
         </Dynamics>
 
         <!-- Exposures are used for observables, for the name enter variable to be observed (usually states)
         and for dimension enter the reduction functionality-->
-        <Exposure name="r" choices="r, V" default="r" description="The quantities of interest for monitoring for the Infinite QIF 2D oscillator."/>
+        <Exposure name="r" choices="r, V" default="r, V" description="The quantities of interest for monitoring for the Infinite QIF 2D oscillator."/>
 
     </ComponentType>
 </Lems>

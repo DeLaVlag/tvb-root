@@ -29,16 +29,14 @@ import argparse
 
 # set global logger level in tvb.logger.library_logger.conf
 
-
-rgn.seed(79)
-
 class TVB_test:
 
 	def __init__(self):
+		np.random.seed(42)
 		self.sim_length = 400
 		self.g = np.array([1.0])
 		self.s = np.array([1.0])
-		self.dt = 0.1
+		self.dt = 0.01
 		self.period = 10.0
 		self.omega = 60.0 * 2.0 * math.pi / 1e3
 		(self.connectivity, self.coupling) = self.tvb_connectivity(self.s, self.g, self.dt)
@@ -225,7 +223,7 @@ class TVB_test:
 		# Todo: fix this for cuda
 		# tvbhpc.check_results(n_nodes, n_work_items, tavg_data, weights, speeds, couplings, logger, args)
 
-	def startsim(self, pop):
+	def startsim(self, pop, tmpld):
 
 		tic = time.time()
 		tvbhpc = TVB_test()
@@ -299,20 +297,21 @@ class TVB_test:
 		func = switcher.get(benchwhat, 'invalid bench choice')
 		logger.info('func %s', func)
 		# quick and dirty comparison between old and templated version
+		if tmpld:
+			pop = pop + 'T'
 		# for k in range(2):
 		# 	if k == 0:
-		# 		# pop = pop + 'T'
+		# 		pop = pop + 'T'
 		# 		print(pop)
 		# 		tavg0 = func(logger, pop)
 		# 	if k == 1:
 		# 		pop = pop + 'T'
 		# 		print(pop)
 		# 		tavg1 = func(logger, pop)
-		# 		print('coercoef=', corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1])
 
 		tavg = func(logger, pop)
 		# print('tavg0', tavg0.shape, '\ntavg1', tavg1.shape)
-
+		# print('coercoef=', corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1])
 
 		toc = time.time()
 		print("Finished python simulation successfully in: {}".format(toc - tac))

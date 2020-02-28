@@ -164,7 +164,9 @@ local_coupling, dx):
     ${nconst.name} = NArray(
         label=":math:`${nconst.name}`",
         default=numpy.array([${nconst.default}]),
+        % if (nconst.domain != "None" and nconst.domain != ""):
         domain=Range(${nconst.domain}),
+        % endif
         doc="""${nconst.description}"""
     )\
     ##self.${nconst.name} = ${nconst.name}

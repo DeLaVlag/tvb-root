@@ -53,6 +53,7 @@ from enum import Enum
 class ModelsEnum(Enum):
     BASE_MODEL = "Model"
     EPILEPTOR = "Epileptor"
+    EPILEPTORT = "EpileptorT"
     EPILEPTOR_2D = "Epileptor2D"
     EPILEPTOR_RS = "EpileptorRestingState"
     EPILEPTOR_CODIM_3 = "EpileptorCodim3"
@@ -63,13 +64,17 @@ class ModelsEnum(Enum):
     LARTER_BREAKSPEAR = "LarterBreakspear"
     LINEAR = "Linear"
     GENERIC_2D_OSCILLATOR = "Generic2dOscillator"
+    GENERIC_2D_OSCILLATORT = "Generic2dOscillatorT"
     KURAMOTO = "Kuramoto"
+    KURAMOTOT = "KuramotoT"
     MONTBRIO = "Theta2D"
+    MONTBRIOT = "Theta2DT"
     SUP_HOPF = "SupHopf"
     REDUCED_SET_FITZ_HUGH_NAGUMO = "ReducedSetFitzHughNagumo"
     REDUCED_SET_HINDMARSH_ROSE = "ReducedSetHindmarshRose"
     WILSON_COWAN = "WilsonCowan"
     REDUCED_WONG_WANG = "ReducedWongWang"
+    REDUCED_WONG_WANGT = "ReducedWongWangT"
     REDUCED_WONG_WANG_EXCH_INH = "ReducedWongWangExcInh"
     ZERLAUT_FIRST_ORDER = "ZerlautAdaptationFirstOrder"
     ZERLAUT_SECOND_ORDER = "ZerlautAdaptationSecondOrder"
@@ -95,19 +100,22 @@ def _get_imported_model(model):
 _module_models = {
     'base': [ModelsEnum.BASE_MODEL],
     'epileptor': [ModelsEnum.EPILEPTOR, ModelsEnum.EPILEPTOR_2D],
+    'epileptorT': [ModelsEnum.EPILEPTORT],
     'epileptor_rs': [ModelsEnum.EPILEPTOR_RS],
     'epileptorcodim3': [ModelsEnum.EPILEPTOR_CODIM_3, ModelsEnum.EPILEPTOR_CODIM_3_SLOW],
     'hopfield': [ModelsEnum.HOPFIELD],
     'jansen_rit': [ModelsEnum.JANSEN_RIT, ModelsEnum.ZETTERBERG_JANSEN],
-    'kuramoto': [ModelsEnum.KURAMOTO],
+    'kuramotoT': [ModelsEnum.KURAMOTOT],
     'larter_breakspear': [ModelsEnum.LARTER_BREAKSPEAR],
     'linear': [ModelsEnum.LINEAR],
     'montbrio': [ModelsEnum.MONTBRIO],
-    # 'oscillator': [ModelsEnum.GENERIC_2D_OSCILLATOR, ModelsEnum.KURAMOTO, ModelsEnum.SUP_HOPF],
-    'oscillator': [ModelsEnum.GENERIC_2D_OSCILLATOR],
+    'montbrioT': [ModelsEnum.MONTBRIOT],
+    'oscillator': [ModelsEnum.GENERIC_2D_OSCILLATOR, ModelsEnum.KURAMOTO, ModelsEnum.SUP_HOPF],
+    'oscillatorT': [ModelsEnum.GENERIC_2D_OSCILLATORT],
     'stefanescu_jirsa': [ModelsEnum.REDUCED_SET_HINDMARSH_ROSE, ModelsEnum.REDUCED_SET_FITZ_HUGH_NAGUMO],
     'wilson_cowan': [ModelsEnum.WILSON_COWAN],
     'wong_wang': [ModelsEnum.REDUCED_WONG_WANG],
+    'wong_wangT': [ModelsEnum.REDUCED_WONG_WANGT],
     'wong_wang_exc_inh': [ModelsEnum.REDUCED_WONG_WANG_EXCH_INH],
     'zerlaut': [ModelsEnum.ZERLAUT_FIRST_ORDER, ModelsEnum.ZERLAUT_SECOND_ORDER],
 }
