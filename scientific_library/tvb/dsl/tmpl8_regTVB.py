@@ -62,7 +62,7 @@ class ${dfunname}(ModelNumbaDfun):
 
     _nvar = ${dynamics.state_variables.__len__()}
     cvar = numpy.array([0], dtype=numpy.int32)
-
+% if (0):
     def _numpy_dfun(self, state_variables, coupling, local_coupling=0.0, ev=numexpr.evaluate):
 
         % for i, itemC in enumerate(dynamics.state_variables):
@@ -104,7 +104,7 @@ class ${dfunname}(ModelNumbaDfun):
         % endfor
 
         return derivative
-
+%endif
     def dfun(self, vw, c, local_coupling=0.0):
         ##lc_0 = local_coupling * vw[0, :, 0]
         vw_ = vw.reshape(vw.shape[:-1]).T
