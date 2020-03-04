@@ -3,8 +3,7 @@ import matplotlib.pyplot as plt
 import time
 from numpy import corrcoef
 
-# model_target = ["Montbrio"]
-model_target = ["Epileptor", "Generic2dOscillator", "Kuramoto", "Montbrio", "ReducedWongWang"]
+model_target = ["Epileptor", "Generic2dOscillator", "Kuramoto", "ReducedWongWang", "Montbrio"]
 for i, trgt in enumerate(model_target):
 
 	def montbrio():
@@ -50,7 +49,7 @@ for i, trgt in enumerate(model_target):
 	print('\n Building and running model:', trgt)
 
 	# make a model template
-	templating.regTVB_templating(filename, modelname)
+	templating.regTVB_templating(trgt)
 
 	import TVB_testsuite.tvbRegCudaNumba as TemplSim
 	# run tvb without model template

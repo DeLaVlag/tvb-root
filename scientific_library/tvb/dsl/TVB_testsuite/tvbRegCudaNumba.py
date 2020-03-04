@@ -64,7 +64,7 @@ class TVB_test:
 			'Epileptor': models.Epileptor,
 			'EpileptorT': models.EpileptorT,
 			'Montbrio': models.Theta2D,
-			'MontbrioT': models.Theta2DT
+			'MontbrioT': models.MontbrioT
 		}
 		func = switcher.get(pop, 'invalid model choice')
 		# logger.info('func %s', func)

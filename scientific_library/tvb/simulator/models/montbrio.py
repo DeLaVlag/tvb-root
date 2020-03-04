@@ -1,152 +1,145 @@
-from .base import Model, ModelNumbaDfun
-import numexpr
-import numpy
-from numpy import *
-from numba import guvectorize, float64
-from tvb.basic.neotraits.api import NArray, Final, List, Range
+from tvb.simulator.models.base import Model
+from tvb.basic.neotraits.api import NArray, List, Range, Final
 
-class Theta2D(ModelNumbaDfun):
-
-        
-    I = NArray(
-        label=":math:`I`",
-        default=numpy.array([0.0]),
-        domain=Range(lo=-10.0, hi=10.0, step=0.01),
-        doc="""???"""
-    )    
-        
-    Delta = NArray(
-        label=":math:`Delta`",
-        default=numpy.array([1.0]),
-        domain=Range(lo=0.0, hi=10.0, step=0.01),
-        doc="""Vertical shift of the configurable nullcline."""
-    )    
-        
-    alpha = NArray(
-        label=":math:`alpha`",
-        default=numpy.array([1.0]),
-        domain=Range(lo=0.0, hi=1.0, step=0.1),
-        doc=""":math:`\alpha` ratio of effect between long-range and local connectivity."""
-    )    
-        
-    s = NArray(
-        label=":math:`s`",
-        default=numpy.array([0.0]),
-        domain=Range(lo=-15.0, hi=15.0, step=0.01),
-        doc="""QIF membrane reversal potential."""
-    )    
-        
-    k = NArray(
-        label=":math:`k`",
-        default=numpy.array([0.0]),
-        domain=Range(lo=-15.0, hi=15.0, step=0.01),
-        doc="""Switch for the terms specific to Coombes model."""
-    )    
-        
-    J = NArray(
-        label=":math:`J`",
-        default=numpy.array([15.0]),
-        domain=Range(lo=-25.0, hi=25.0, step=0.0001),
-        doc="""Constant parameter to scale the rate of feedback from the slow variable to the firing rate variable."""
-    )    
-        
-    eta = NArray(
-        label=":math:`eta`",
-        default=numpy.array([-5.0]),
-        domain=Range(lo=-10.0, hi=10.0, step=0.0001),
-        doc="""Constant parameter to scale the rate of feedback from the firing rate variable to itself"""
-    )    
-        
-    Gamma = NArray(
-        label=":math:`Gamma`",
-        default=numpy.array([0.0]),
-        domain=Range(lo=0., hi=10.0, step=0.1),
-        doc="""Derived from eterogeneous currents and synaptic weights (see Montbrio p.12)."""
-    )    
-        
-    gamma = NArray(
-        label=":math:`gamma`",
-        default=numpy.array([1.0]),
-        domain=Range(lo=-2.0, hi=2.0, step=0.1),
-        doc="""Constant parameter to reproduce FHN dynamics where excitatory input currents are negative. It scales both I and the long range coupling term."""
-    )    
-
-    state_variable_range = Final(
-        label="State Variable ranges [lo, hi]",
-        default={"r": numpy.array([0., 2.0]), 
-				 "V": numpy.array([-2.0, 1.5])},
-        doc="""state variables"""
-    )
-
-    state_variable_boundaries = Final(
-
-        label="State Variable boundaries [lo, hi]",
-        default={"r": numpy.array([0.0, numpy.inf])},
-    )
-
-    variables_of_interest = List(
-        of=str,
-        label="Variables or quantities available to Monitors",
-        choices=("'r'', 'V'"),
-        default=("r", ),
-        doc="The quantities of interest for monitoring for the generic 2D oscillator."
-    )
-
-    state_variables = ['r', 'V']
-
-    _nvar = 2
-    cvar = numpy.array([0], dtype=numpy.int32)
-
-    def _numpy_dfun(self, state_variables, coupling, local_coupling=0.0, ev=numexpr.evaluate):
-
-        r = state_variables[0,:]
-        V = state_variables[1,:]
-
-        #[State_variables, nodes]
-
-        I = self.I
-        Delta = self.Delta
-        alpha = self.alpha
-        s = self.s
-        k = self.k
-        J = self.J
-        eta = self.eta
-        Gamma = self.Gamma
-        gamma = self.gamma
-
-        derivative = numpy.empty_like(state_variables)
-
-        Coupling_global = alpha * coupling[0]
-        Coupling_local = (1-alpha) * local_coupling * r
-        Coupling_Term = Coupling_global + Coupling_local
+import numpy as np
 
 
-        ev('Delta / 3.14 + 2 * V * r - k * r**2 + Gamma * r / 3.14', out=derivative[0])
-        ev('V**2 - 3.14**2 * r**2 + eta + (k * s + J) * r - k * V * r + gamma * I + Coupling_Term', out=derivative[1])
+class Theta2D(Model):
+	r"""
+    2D model describing the Ott-Antonsen reduction of infinitely all-to-all coupled QIF neurons (Theta-neurons).
+    Depending on the parameter choice one finds the system equations as in
+    i) Montbrio, Pazo, Roxin, 2015.
+    ii) Coombes, Byrne, 2016.
 
-        return derivative
+    The two state variables :math:`r` and :math:`V` represent the average firing rate and
+    the average membrane potential of our QIF neurons.
 
-    def dfun(self, vw, c, local_coupling=0.0):
-        vw_ = vw.reshape(vw.shape[:-1]).T
-        c_ = c.reshape(c.shape[:-1]).T
-        deriv = _numba_dfun_Theta2D(vw_, c_, self.I, self.Delta, self.alpha, self.s, self.k, self.J, self.eta, self.Gamma, self.gamma, local_coupling)
+    The equations of the infinite QIF 2D population model read
+    .. math::
+            \dot{r} &= Delta/pi + 2 V r - k r^2,
+            \dot{V} &= (V^2 - pi^2 r^2 + eta + (k s + J) r - k V r + gamma I ), \\
 
-        return deriv.T[..., numpy.newaxis]
+    """
 
-# @guvectorize([(float64[:],) * 13], '(n),(m)' + ',()'*10 + '->(n)', nopython=True)
-@guvectorize([(float64[:], float64[:], float64, float64, float64, float64, float64, float64, float64, float64, float64, float64, float64[:])], '(n),(m)' + ',()'*10 + '->(n)', nopython=True)
+	# Define traited attributes for this model, these represent possible kwargs.
+	I = NArray(
+		label=":math:`I_{ext}`",
+		default=np.array([0.0]),
+		domain=Range(lo=-10.0, hi=10.0, step=0.01),
+		doc="""???""",
+	)
 
-def _numba_dfun_Theta2D(vw, coupling, I, Delta, alpha, s, k, J, eta, Gamma, gamma, local_coupling, dx):
-    "Gufunc for Theta2D model equations."
+	Delta = NArray(
+		label=r":math:`\Delta`",
+		default=np.array([1.0]),
+		domain=Range(lo=0.0, hi=10.0, step=0.01),
+		doc="""Vertical shift of the configurable nullcline""",
+	)
 
-    r = vw[0]
-    V = vw[1]
+	alpha = NArray(
+		label=r":math:`\alpha`",
+		default=np.array([1.0]),
+		domain=Range(lo=0.0, hi=1.0, step=0.1),
+		doc=""":math:`\alpha` ratio of effect between long-range and local connectivity""",
+	)
 
-    Coupling_global = alpha * coupling[0]
-    Coupling_local = (1-alpha) * local_coupling * r
-    Coupling_Term = Coupling_global + Coupling_local
+	s = NArray(
+		label=":math:`s`",
+		default=np.array([0.0]),
+		domain=Range(lo=-15.0, hi=15.0, step=0.01),
+		doc="""QIF membrane reversal potential""",
+	)
 
+	k = NArray(
+		label=":math:`k`",
+		default=np.array([0.0]),
+		domain=Range(lo=-15.0, hi=15.0, step=0.01),
+		doc="""Switch for the terms specific to Coombes model""",
+	)
 
-    dx[0] = Delta / 3.14 + 2 * V * r - k * r**2 + Gamma * r / 3.14
-    dx[1] = V**2 - 3.14**2 * r**2 + eta + (k * s + J) * r - k * V * r + gamma * I + Coupling_Term
-            
+	J = NArray(
+		label=":math:`J`",
+		default=np.array([15.0]),
+		domain=Range(lo=-25.0, hi=25.0, step=0.0001),
+		doc="""Constant parameter to scale the rate of feedback from the
+            slow variable to the firing rate variable.""",
+	)
+
+	eta = NArray(
+		label=r":math:`\eta`",
+		default=np.array([-5.0]),
+		domain=Range(lo=-10.0, hi=10.0, step=0.0001),
+		doc="""Constant parameter to scale the rate of feedback from the
+            firing rate variable to itself""",
+	)
+
+	# Informational attribute, used for phase-plane and initial()
+	state_variable_range = Final(
+		label="State Variable ranges [lo, hi]",
+		default={"r": np.array([0., 2.0]),
+				 "V": np.array([-2.0, 1.5])},
+		doc="""Expected ranges of the state variables for initial condition generation and phase plane setup.""",
+	)
+
+	state_variable_boundaries = Final(
+		label="State Variable boundaries [lo, hi]",
+		default={
+			"r": np.array([0.0, np.inf])
+		},
+	)
+
+	Gamma = NArray(
+		label=r":math:`\Gamma`",
+		default=np.array([0.0]),
+		domain=Range(lo=0., hi=10.0, step=0.1),
+		doc="""Derived from eterogeneous currents and synaptic weights (see Montbrio p.12)""",
+	)
+
+	# This parameter is basically a hack to avoid having a negative lower boundary in the global coupling strength.
+	gamma = NArray(
+		label=r":math:`\gamma`",
+		default=np.array([1.0]),
+		domain=Range(lo=-2.0, hi=2.0, step=0.1),
+		doc="""Constant parameter to reproduce FHN dynamics where
+               excitatory input currents are negative.
+               It scales both I and the long range coupling term.""",
+	)
+
+	variables_of_interest = List(
+		of=str,
+		label="Variables or quantities available to Monitors",
+		choices=("r", "V"),
+		default=("r", "V"),
+		doc="The quantities of interest for monitoring for the Infinite QIF 2D oscillator.",
+	)
+
+	state_variables = ('r', 'V')
+	_nvar = 2
+	# Cvar is the coupling variable.
+	cvar = np.array([0, 1], dtype=np.int32)
+
+	def dfun(self, state_variables, coupling, local_coupling=0.0):
+		r = state_variables[0, :]
+		V = state_variables[1, :]
+
+		# [State_variables, nodes]
+		I = self.I
+		Delta = self.Delta
+		s = self.s
+		k = self.k
+		gamma = self.gamma
+		Gamma = self.Gamma
+		eta = self.eta
+		J = self.J
+		alpha = self.alpha
+
+		Coupling_global = alpha * coupling[0, :]  # This zero refers to the first element of cvar (trivial in this case)
+		Coupling_local = (1 - alpha) * local_coupling * r
+		Coupling_Term = Coupling_global + Coupling_local
+
+		derivative = np.empty_like(state_variables)
+
+		derivative[0] = Delta / np.pi + 2 * V * r - k * r ** 2 + Gamma * r / np.pi
+		derivative[1] = V ** 2 - np.pi ** 2 * r ** 2 + eta + (k * s + J) * r - k * V * r + gamma * I + Coupling_Term
+
+		return derivative
