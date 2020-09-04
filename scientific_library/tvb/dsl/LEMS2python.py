@@ -160,7 +160,7 @@ if __name__ == "__main__":
     regTVB_templating('MontbrioT', './NeuroML/XMLmodels/')
 
     # print(os.environ)
-    token = os.environ["HBP_AUTH_TOKEN"]="eyJhbGciOiJSUzI1NiIsImtpZCI6ImJicC1vaWRjIn0.eyJleHAiOjE1OTg4OTczNjcsInN1YiI6IjMwODEyNiIsImF1ZCI6WyJuZXh1cy1rZy1zZWFyY2giXSwiaXNzIjoiaHR0cHM6XC9cL3NlcnZpY2VzLmh1bWFuYnJhaW5wcm9qZWN0LmV1XC9vaWRjXC8iLCJqdGkiOiIxOGVmNmM4NC1kNjA5LTQxOGYtYTE1Zi1kNWY5OTQ2YzJkODYiLCJpYXQiOjE1OTg4ODI5NjcsImhicF9rZXkiOiIzYTcwNjdjNWZmYjZlZTY4YTVjNDUyMDU2MTI5NjI2Mzc1NjcyODA4In0.cAnkmp25ZIymoT2THhg7odlUbNnFMST3VZ4W-gw8-sbyrompVzEsf48pEXnWP1u-fKXmI1_EW3jTNYYkpkb9DzWeIwveIcw-s7W9FdEob3e27P4zmndRCyrq1E8ubRVCU1xQ4pPIZl1tSpT1UBnef8uXbIFMgyaXzrIBUJ8z1BY"
+    token = os.environ["HBP_AUTH_TOKEN"]=""
     client = KGClient(token, "https://kg.humanbrainproject.eu/query")
     # example = TVBtestDataset(client, '10.25493/1ECN-6SM')
     example = TVBtestDataset(client)
