@@ -17,7 +17,14 @@
         <Constant name="J" domain="lo=-25.0, hi=25.0, step=0.0001" default="15.0" description="Constant parameter to scale the rate of feedback from the slow variable to the firing rate variable."/>
         <Constant name="eta" domain="lo=-10.0, hi=10.0, step=0.0001" default="-5.0" description="Constant parameter to scale the rate of feedback from the firing rate variable to itself"/>
         <Constant name="Gamma" domain="lo=0., hi=10.0, step=0.1" default="0.0" description="Derived from eterogeneous currents and synaptic weights (see Montbrio p.12)."/>
-        <Constant name="gamma" domain="lo=-2.0, hi=2.0, step=0.1" default="1.0" description="Constant parameter to reproduce FHN dynamics where excitatory input currents are negative. It scales both I and the long range coupling term."/>
+        <Constant name="gamma" domain="lo=-2.0, hi=2.0, step=0.1" default="777" description="Constant parameter to reproduce FHN dynamics where excitatory input currents are negative. It scales both I and the long range coupling term."/>
+
+        <!-- contants used for atlas_data data, must match the data filename -->
+        <Constant name="ccr_mha" domain="lo=1.0, hi=2.0, step=3.0" default="66.0" description="cell count/region."/>
+        <Constant name="scr_mha" domain="lo=2.0, hi=3.0, step=4.0" default="66.0" description="cell count/region."/>
+        <Constant name="fbr_mha" domain="lo=3.0, hi=4.0, step=5.0" default="66.0" description="cell count/region."/>
+
+
 
         <Dynamics>
             <!-- "State variable ranges [lo, hi]" values are entered with keyword "default" -->

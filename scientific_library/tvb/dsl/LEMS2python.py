@@ -62,6 +62,9 @@ def default_template():
     return template
 
 def load_atlas_data():
+    """
+    search for mha annotated files and add their data to 'atlas_data' 2 dim array
+    """
 
     atlas_data = []
     atlas_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'NeuroML', 'atlas_data')
@@ -73,8 +76,10 @@ def load_atlas_data():
     return atlas_data
 
 def process_atlas_data(atlas_data):
+    """
+    some processing of the data, in this case normalize the data
+    """
 
-    # for now normalize the data
     for regions, data in enumerate(atlas_data):
         datalength=(len(data))
         for regs, dat in enumerate(data):
@@ -83,8 +88,10 @@ def process_atlas_data(atlas_data):
     return atlas_data
 
 def annotate_template_data(atlas_data, model_name, model):
-
-    # for regions, data in enumerate(atlas_data):
+    """
+    search for mha annotated constant names and add region specific 'atlas_data' to constants
+    such to be processed in regular model generation
+    """
     cnstcntr=0
     for cnstnr, cnst in enumerate(model.component_types[model_name].constants):
         if 'mha' in cnst.name:
@@ -160,12 +167,12 @@ if __name__ == "__main__":
     regTVB_templating('MontbrioT', './NeuroML/XMLmodels/')
 
     # print(os.environ)
-    token = os.environ["HBP_AUTH_TOKEN"]=""
-    client = KGClient(token, "https://kg.humanbrainproject.eu/query")
-    # example = TVBtestDataset(client, '10.25493/1ECN-6SM')
-    example = TVBtestDataset(client)
-    # print(example.create_filter_params())
-    dataatje = example.fetch()
+    # token = os.environ["HBP_AUTH_TOKEN"]=""
+    # client = KGClient(token, "https://kg.humanbrainproject.eu/query")
+    # # example = TVBtestDataset(client, '10.25493/1ECN-6SM')
+    # example = TVBtestDataset(client)
+    # # print(example.create_filter_params())
+    # dataatje = example.fetch()
 
     # datadict={}
     # returneddatadict={}
