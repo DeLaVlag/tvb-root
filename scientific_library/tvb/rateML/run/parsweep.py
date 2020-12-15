@@ -53,13 +53,13 @@ class TVB_test:
 		parser.add_argument('-s', '--n_speed', help='num grid points for speed parameter', default=32, type=int)
 		parser.add_argument('-t', '--test', help='check results', action='store_true')
 		parser.add_argument('-n', '--n_time', help='number of time steps to do (default 400)', type=int, default=400)
-		parser.add_argument('-v', '--verbose', help='increase logging verbosity', action='store_true', default='-v')
+		parser.add_argument('-v', '--verbose', help='increase logging verbosity', action='store_true', default='')
 		# parser.add_argument('-p', '--no_progress_bar', help='suppress progress bar', action='store_false')
 		parser.add_argument('--caching',
-							choices=['none', 'shared', 'shared_sync', 'shuffle'],
-							help="caching strategy for j_node loop (default shuffle)",
-							default='none'
-							)
+		 					choices=['none', 'shared', 'shared_sync', 'shuffle'],
+		 					help="caching strategy for j_node loop (default shuffle)",
+		 					default='none'
+		 					)
 		parser.add_argument('--node_threads', default=1, type=int)
 		parser.add_argument('--model',
 							#choices=['Rwongwang', 'Kuramoto', 'Epileptor', 'Oscillator', \

@@ -56,6 +56,7 @@ import tvb.simulator.models
 from mako.template import Template
 import re
 from tvb.basic.logger.builder import get_logger
+import numpy as np
 
 # not ideal but avoids modifying  the vendored LEMS itself
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
@@ -117,6 +118,43 @@ class RateML:
         tmp_filename = os.path.join(here, 'tmpl8_'+ self.language +'.py')
         template = Template(filename=tmp_filename)
         return template
+
+    def load_atlas_data(self):
+        """
+        search for mha annotated files and add their data to 'atlas_data' 2 dim array
+        """
+
+        atlas_data = []
+        atlas_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'atlas_data')
+        for findex, filename in enumerate(os.listdir(atlas_dir)):
+            if filename.__contains__("mha"):
+                file = (os.path.join(atlas_dir, filename))
+                atlas_data.insert(findex, np.genfromtxt(file, delimiter=','))
+
+        return atlas_data
+
+    def process_atlas_data(self, atlas_data):
+        """
+        some processing of the data, in this case normalize the data
+        """
+
+        for regions, data in enumerate(atlas_data):
+            datalength = (len(data))
+            for regs, dat in enumerate(data):
+                atlas_data[regions][regs] = atlas_data[regions][regs] / datalength
+
+        return atlas_data
+
+    def annotate_template_data(self, atlas_data, model):
+        """
+        search for mha annotated constant names and add region specific 'atlas_data' to constants
+        such to be processed in regular model generation
+        """
+        cnstcntr = 0
+        for cnstnr, cnst in enumerate(model.component_types['derivatives'].constants):
+            if 'mha' in cnst.name:
+                cnst.default = atlas_data[cnstcntr]
+                cnstcntr += 1
 
     def XSD_validate_XML(self):
 
@@ -252,6 +290,9 @@ class RateML:
 
         model, svboundaries, couplinglist, noisepresent, nsigpresent = self.load_model()
 
+        # start virtual big brain import
+        self.annotate_template_data(self.process_atlas_data(self.load_atlas_data()), model)
+
         derivative_list = model.component_types['derivatives']
 
         if self.language == 'python':
@@ -322,13 +363,13 @@ class RateML:
 
 if __name__ == "__main__":
 
-    # language='python'
-    language='cuda'
+    language='python'
+    # language='cuda'
 
-    # model_filename = 'montbrio'
+    model_filename = 'montbrio'
     # model_filename = 'oscillator'
     # model_filename = 'kuramoto'
-    model_filename = 'rwongwang'
+    # model_filename = 'rwongwang'
     # model_filename = 'epileptor'
 
     RateML(model_filename, language, './XMLmodels/', './generatedModels/')

@@ -32,9 +32,6 @@ class CudaRun:
 					no_extern_c=True,
 					keep=False,
 			)
-			# no API to know the mangled function name ahead of time
-			# if the func sig changes, just copy-paste the new name here..
-			# TODO parse verbose output of nvcc to get function name and make dynamic
 
 		# mod_func = '_Z9EpileptorjjjjjffPfS_S_S_S_'
 		# mod_func = '_Z8KuramotojjjjjffPfS_S_S_S_'
