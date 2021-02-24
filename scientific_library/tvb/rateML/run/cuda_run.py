@@ -40,7 +40,7 @@ class CudaRun:
 		# mod_func = '_Z8KuramotojjjjjffPfS_S_S_S_'
 		# mod_func = '_Z9RwongwangjjjjjffPfS_S_S_S_'
 		# mod_func = '_Z12KuratmotorefjjjjjffPfS_S_S_S_'
-		mod_func = "{}{}{}{}".format('_Z', len(args.model), args.model.capitalize(), 'jjjjjffPfS_S_S_S_')
+		mod_func = "{}{}{}{}".format('_Z', len(args.model), args.model, 'jjjjjffPfS_S_S_S_')
 
 		step_fn = network_module.get_function(mod_func)
 
