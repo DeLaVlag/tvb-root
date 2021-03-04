@@ -52,7 +52,7 @@ class TVB_test:
 		parser.add_argument('-c', '--n_coupling', help='num grid points for coupling parameter', default=32, type=int)
 		parser.add_argument('-s', '--n_speed', help='num grid points for speed parameter', default=32, type=int)
 		parser.add_argument('-t', '--test', help='check results', action='store_true')
-		parser.add_argument('-n', '--n_time', help='number of time steps to do (default 400)', type=int, default=400)
+		parser.add_argument('-n', '--n_time', help='number of time steps to do (default 400)', type=int, default=4)
 		parser.add_argument('-v', '--verbose', help='increase logging verbosity', action='store_true', default='-v')
 		# parser.add_argument('-p', '--no_progress_bar', help='suppress progress bar', action='store_false')
 		# parser.add_argument('--caching',
@@ -65,11 +65,11 @@ class TVB_test:
 							#choices=['Rwongwang', 'Kuramoto', 'Epileptor', 'Oscillator', \
 							#		 'Oscillatorref', 'Kuramotoref', 'Rwongwangref', 'Epileptorref'],
 							help="neural mass model to be used during the simulation",
-							default='Oscillator'
+							default='kuramoto'
 							)
 		parser.add_argument('--lineinfo', default=True, action='store_true')
 
-		parser.add_argument('--filename', default="kuramoto_network.c", type=str,
+		parser.add_argument('--filename', default="kuramoto.c", type=str,
 							help="Filename to use as GPU kernel definition")
 
 		# parser.add_argument('-b', '--bench', default="regular", type=str, help="What to bench: regular, numba, cuda")

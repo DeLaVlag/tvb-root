@@ -1,4 +1,4 @@
-import pytest, os, glob, itertools, numpy as np, re
+import pytest, os, glob, itertools, numpy as np, re, argparse, subprocess, pickle
 from tvb.rateML.run.__main__ import TVB_test
 from tvb.rateML.run.cuda_run import CudaRun
 from tvb.tests.library.base_testcase import BaseTestCase
@@ -17,7 +17,7 @@ from cuda_run import CudaRun
 framework_path, _ = os.path.split(XML2model.__file__)
 XMLModel_path = os.path.join(framework_path, "XMLmodels")
 generatedModels_path = os.path.join(framework_path, "generatedModels")
-#dic_regex_mincount = {r'^__global':1, r'^__device':1}
+run_path = os.path.join(framework_path, "run")
 dic_regex_mincount = {r'^__global':1,
                       r'^__device':3,
                       r'^__device__ float wrap_it_':2,
@@ -33,6 +33,23 @@ def compiler_opts():
     opts.append('-DWARP_SIZE=%d' % (32,))
     opts.append('-DBLOCK_DIM_X=%d' % (32,))
     opts.append('-DNH=%s' % ('nh',))
+
+def simulation_args(model):
+    parser = argparse.ArgumentParser(description='Run parameter sweep.')
+    parser.add_argument('-c', '--n_coupling', help='num grid points for coupling parameter', default=32, type=int)
+    parser.add_argument('-s', '--n_speed', help='num grid points for speed parameter', default=32, type=int)
+    parser.add_argument('-n', '--n_time', help='number of time steps to do (default 400)', type=int, default=4)
+    parser.add_argument('-v', '--verbose', help='increase logging verbosity', action='store_true', default='-v')
+    parser.add_argument('--node_threads', default=1, type=int)
+    parser.add_argument('--model',
+                        help="neural mass model to be used during the simulation",
+                        default=model)
+    parser.add_argument('--filename', default=model+".c", type=str,
+                        help="Filename to use as GPU kernel definition")
+    parser.add_argument('--stts', default="1", type=int, help="Number of states of model")
+    parser.add_argument('--tvbn', default="68", type=str, help="Number of tvb nodes")
+
+    return parser.parse_args()
 #######
 
 class TestRateML():
@@ -89,30 +106,30 @@ class TestRateML():
         assert compiled
 
     @pytest.mark.slow
-    @pytest.mark.parametrize('model', models)
-    def test_simulation_cuda_models(self, model):
-        source_file = os.path.join(generatedModels_path, model + ".c")
-        with open(source_file, 'r') as f:
-            #mod_content = mod_content.replace('M_PI_F', '%ff' % (np.pi,))
-            #Compile model
-            #mod = SourceModule(mod_content, options=compiler_opts(), include_dirs=[], no_extern_c=True, keep=False)
-            #mod_func = "{}{}{}{}".format('_Z', len(model), model, 'jjjjjffPfS_S_S_S_')
+    def test_simulation_cuda_models(self):
 
-            #execute the function into the GPU
-            #func = mod.get_function(mod_func)
-            ###########
+        model = "kuramoto"
+        n_coupling = 32
+        n_speed = 32
+        n_steps = 4
+        total_data = n_coupling * n_speed
+        path = os.path.join(run_path, "__main__.py")
+        cmd = "python " + path + " --model " + model + " -c " + str(n_coupling) + " -s " + str(n_speed) + " -n " + str(
+            n_steps) + " --tvbn 68 --stts 1"
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   universal_newlines=True)
+        out, err = process.communicate()
 
-            logging.basicConfig(level=logging.DEBUG if self.args.verbose else logging.INFO)
-            logger = logging.getLogger('[TVB_CUDA]')
+        # Warnings are in sterr
+        print(err, '\n\n', out)
 
-            cudarun = CudaRun()
-
-            tester = TVB_test()
-
-            tavg_data = cudarun.run_simulation(tester.weights, tester.lengths, tester.params, tester.speeds, logger,
-                                               tester.args, tester.n_nodes, tester.n_work_items, tester.n_params, tester.nstep,
-                                               tester.n_inner_steps, tester.buf_len, tester.states, tester.dt, tester.min_speed)
-            print(vars(tavg_data))
+        # Reading the simulation data
+        tavg_file = open(os.path.join(run_path, 'tavg_data'), 'rb')
+        tavg_data = pickle.load(tavg_file)
+        tavg_file.close()
+        b, c, d = tavg_data.shape
+        print(tavg_data.shape)
+        assert d == total_data
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model', models)
