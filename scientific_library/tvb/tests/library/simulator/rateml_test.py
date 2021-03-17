@@ -96,7 +96,7 @@ class TestRateML():
         source_file = os.path.join(generatedModels_path, model + ".c")
         compiled = False
         with open(source_file, 'r') as f:
-            mod_content = mod_content.replace('M_PI_F', '%ff' % (np.pi,))
+            mod_content = f.read().replace('M_PI_F', '%ff' % (np.pi,))
 
             # Compile model
             mod = SourceModule(mod_content, options=compiler_opts(), include_dirs=[], no_extern_c=True, keep=False)
