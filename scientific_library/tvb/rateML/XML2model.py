@@ -321,7 +321,7 @@ class RateML:
 
         return model, svboundaries, couplinglist, noisepresent, nsigpresent, error
 
-    def render_model(self):
+    def render(self):
         '''
         render_model start the mako templating.
         this function is similar for all languages. its .render arguments are overloaded.
