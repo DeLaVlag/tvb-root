@@ -123,7 +123,7 @@ class TestRateML():
         n_steps = 4
         total_data = n_coupling * n_speed
         path = os.path.join(run_path, "model_driver.py")
-        cmd = "python " + path + " --model " + model + " -c " + str(n_coupling) + " -s " + str(n_speed) + " -n " + str(n_steps)
+        cmd = "python " + path + " --model " + model + " -c " + str(n_coupling) + " -s " + str(n_speed) + " -n " + str(n_steps) + " -w"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    universal_newlines=True)
         out, err = process.communicate()
@@ -150,7 +150,7 @@ class TestRateML():
             # trucate the file to avoid processing bold_update
             lines = lines.split("__global__ void bold_update")[0]
 
-            pattern_model = r'^__global__ void ' + model + '\\('
+            pattern_model = r'^__global__ void ' + model + '\('
             if len(re.findall(pattern=pattern_model, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)) <= 0:
                 print("Error", pattern_model, "did not found", model)
                 assert False
