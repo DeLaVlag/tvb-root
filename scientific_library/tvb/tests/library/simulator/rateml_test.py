@@ -11,7 +11,7 @@ import pycuda.driver as cuda
 from pycuda.compiler import SourceModule
 
 from tvb.rateML.run import __main__
-from cuda_run import CudaRun
+#from cuda_run import CudaRun
 
 
 framework_path, _ = os.path.split(XML2model.__file__)
@@ -19,8 +19,8 @@ XMLModel_path = os.path.join(framework_path, "XMLmodels")
 generatedModels_path = os.path.join(framework_path, "generatedModels")
 run_path = os.path.join(framework_path, "run")
 dic_regex_mincount = {r'^__global':1,
-                      r'^__device':3,
-                      r'^__device__ float wrap_it_':2,
+                      r'^__device':1,
+                      r'^__device__ float wrap_it_':1,
                       r'state\(\(\(':1,
                       r'state\(\(t':2,
                       r'tavg\(':1,
@@ -54,6 +54,7 @@ def simulation_args(model):
 
 class TestRateML():
     models=["epileptor", "kuramoto", "montbrio", "oscillator", "rwongwang"]
+
     languages = ["python", "cuda"]
 
     @pytest.mark.slow
@@ -109,13 +110,12 @@ class TestRateML():
     def test_simulation_cuda_models(self):
 
         model = "kuramoto"
-        n_coupling = 32
-        n_speed = 32
+        n_coupling = 8
+        n_speed = 8
         n_steps = 4
         total_data = n_coupling * n_speed
-        path = os.path.join(run_path, "__main__.py")
-        cmd = "python " + path + " --model " + model + " -c " + str(n_coupling) + " -s " + str(n_speed) + " -n " + str(
-            n_steps) + " --tvbn 68 --stts 1"
+        path = os.path.join(run_path, "model_driver.py")
+        cmd = "python " + path + " --model " + model + " -c " + str(n_coupling) + " -s " + str(n_speed) + " -n " + str(n_steps)
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    universal_newlines=True)
         out, err = process.communicate()
@@ -127,9 +127,9 @@ class TestRateML():
         tavg_file = open(os.path.join(run_path, 'tavg_data'), 'rb')
         tavg_data = pickle.load(tavg_file)
         tavg_file.close()
-        b, c, d = tavg_data.shape
+        a, b, c, d = tavg_data.shape
         print(tavg_data.shape)
-        assert d == total_data
+        assert (a,b,c,d) == (4,2,68,total_data)
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model', models)

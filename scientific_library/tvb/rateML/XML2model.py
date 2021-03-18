@@ -125,7 +125,7 @@ class RateML:
             self.write_model_file(self.set_driver_location(), driver_str)
 
             # for driver robustness also write XML to default location generatedModels folder for CUDA
-            if self.language == 'cuda'and GENfolder != None:
+            if self.language == 'cuda'and self.GENfolder != None:
                 default_save = os.path.join(self.default_generation_folder(), self.model_filename.lower() + '.c')
                 self.write_model_file(default_save, model_str)
 
@@ -326,18 +326,6 @@ class RateML:
         render_model start the mako templating.
         this function is similar for all languages. its .render arguments are overloaded.
         '''
-
-        model, svboundaries, couplinglist, noisepresent, nsigpresent = self.load_model()
-
-        derivative_list = model.component_types['derivatives']
-
-        model_str = self.render_model(derivative_list, svboundaries, couplinglist, noisepresent, nsigpresent)
-
-        # render driver only in case of cuda
-        driver_str = ''
-        if self.language == 'cuda':
-            driver_str = self.render_driver(derivative_list)
-
         validation = ""
         derivative_list = None
         model, svboundaries, couplinglist, noisepresent, nsigpresent, error = self.load_model()
@@ -362,6 +350,10 @@ class RateML:
             # Python Validation
 
             # Cuda Validation
+            # - render driver only in case of cuda
+            driver_str = ''
+            if self.language == 'cuda':
+                driver_str = self.render_driver(derivative_list)
 
         else:
             validation += "Derivatives component is missing.\n"
@@ -369,6 +361,7 @@ class RateML:
         if len(validation) > 0:
             return None, driver_str, validation
 
+        model_str = self.render_model(derivative_list, svboundaries, couplinglist, noisepresent, nsigpresent)
         return model_str, driver_str, validation
 
 
