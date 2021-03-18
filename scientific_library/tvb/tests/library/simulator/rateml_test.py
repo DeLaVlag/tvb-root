@@ -110,6 +110,14 @@ class TestRateML():
     def test_simulation_cuda_models(self):
 
         model = "kuramoto"
+
+        ##Move model to the script location
+        cmd = "cp " + os.path.join(generatedModels_path, model + ".c") + " " + run_path
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   universal_newlines=True)
+        out, err = process.communicate()
+        assert len(out) == 0 and len(err) == 0
+
         n_coupling = 8
         n_speed = 8
         n_steps = 4
@@ -124,7 +132,7 @@ class TestRateML():
         print(err, '\n\n', out)
 
         # Reading the simulation data
-        tavg_file = open(os.path.join(run_path, 'tavg_data'), 'rb')
+        tavg_file = open('tavg_data', 'rb')
         tavg_data = pickle.load(tavg_file)
         tavg_file.close()
         a, b, c, d = tavg_data.shape
@@ -142,7 +150,7 @@ class TestRateML():
             # trucate the file to avoid processing bold_update
             lines = lines.split("__global__ void bold_update")[0]
 
-            pattern_model = r'^__global__ void ' + model + '\('
+            pattern_model = r'^__global__ void ' + model + '\\('
             if len(re.findall(pattern=pattern_model, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)) <= 0:
                 print("Error", pattern_model, "did not found", model)
                 assert False
