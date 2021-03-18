@@ -107,6 +107,34 @@ class TestRateML():
         assert compiled
 
     @pytest.mark.slow
+    @pytest.mark.parametrize('model', models)
+    def test_contentcheck_cuda_models(self, model):
+
+        source_file = os.path.join(generatedModels_path, model + ".c")
+        with open(source_file, "r") as f:
+            lines = f.read()
+
+            # trucate the file to avoid processing bold_update
+            lines = lines.split("__global__ void bold_update")[0]
+
+            pattern_model = r'^__global__ void ' + model + '\('
+            if len(re.findall(pattern=pattern_model, string=lines,
+                              flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)) <= 0:
+                print("Error", pattern_model, "did not found", model)
+                assert False
+            else:
+                assert True
+
+            for regex, mincount in dic_regex_mincount.items():
+                matches = re.findall(pattern=regex, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)
+
+                if len(matches) < dic_regex_mincount[regex]:
+                    print("Error", regex, "found", len(matches), "of", mincount)
+                    assert False
+                else:
+                    assert True
+
+    @pytest.mark.slow
     def test_simulation_cuda_models(self):
 
         model = "kuramoto"
@@ -138,30 +166,3 @@ class TestRateML():
         a, b, c, d = tavg_data.shape
         print(tavg_data.shape)
         assert (a,b,c,d) == (4,2,68,total_data)
-
-    @pytest.mark.slow
-    @pytest.mark.parametrize('model', models)
-    def test_contentcheck_cuda_models(self, model):
-
-        source_file = os.path.join(generatedModels_path, model + ".c")
-        with open(source_file, "r") as f:
-            lines = f.read()
-
-            # trucate the file to avoid processing bold_update
-            lines = lines.split("__global__ void bold_update")[0]
-
-            pattern_model = r'^__global__ void ' + model + '\('
-            if len(re.findall(pattern=pattern_model, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)) <= 0:
-                print("Error", pattern_model, "did not found", model)
-                assert False
-            else:
-                assert True
-
-            for regex, mincount in dic_regex_mincount.items():
-                matches = re.findall(pattern=regex, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)
-
-                if len(matches) < dic_regex_mincount[regex]:
-                    print("Error", regex, "found", len(matches), "of", mincount)
-                    assert False
-                else:
-                    assert True
