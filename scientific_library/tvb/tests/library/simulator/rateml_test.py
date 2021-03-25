@@ -13,6 +13,7 @@ xmlModelTesting = "kuramoto.xml"
 framework_path, _ = os.path.split(XML2model.__file__)
 XMLModel_path = os.path.join(framework_path, "XMLmodels")
 generatedModels_path = os.path.join(framework_path, "generatedModels")
+cuda_ref_path = os.path.join("generatedModels", "cuda_refs")
 run_path = os.path.join(framework_path, "run")
 dic_regex_mincount = {r'^__global':1,
                       r'^__device':1,
@@ -21,11 +22,41 @@ dic_regex_mincount = {r'^__global':1,
                       r'state\(\(t':2,
                       r'tavg\(':1,
                       r'= params\(\d\)\;$':2}
+def compiler_opts():
+    opts = ['--ptxas-options=-v', '-maxrregcount=32', '-lineinfo']
+    opts.append('-lineinfo')
+    opts.append('-DWARP_SIZE=%d' % (32,))
+    opts.append('-DBLOCK_DIM_X=%d' % (32,))
+    opts.append('-DNH=%s' % ('nh',))
+
+def compile_cuda_model(model_name):
+    source_file = os.path.join(generatedModels_path, model_name + ".c")
+    compiled = False
+    with open(source_file, 'r') as f:
+        mod_content = f.read().replace('M_PI_F', '%ff' % (np.pi,))
+
+        # Compile model
+        mod = SourceModule(mod_content, options=compiler_opts(), include_dirs=[], no_extern_c=True, keep=False)
+        if mod is not None:
+            compiled = True
+    return compiled
 
 class TestRateML():
     models=["epileptor", "kuramoto", "montbrio", "oscillator", "rwongwang"]
     python_mods = ["python"]*len(models)
     languages = ["python", "cuda"]
+
+    @pytest.mark.slow
+    def test_make_cuda_data(self):
+        data = {}
+        n_times = 20
+        data["serie"] = np.zeros(2, 'f')
+
+        sys.argv = sys.argv[1:]
+        driver = driver = Driver_Execute(Driver_Setup())
+        gpu_data = driver.make_gpu_data(data)
+
+        assert gpu_data["serie"].size == data["serie"].size
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name', models)
@@ -58,16 +89,21 @@ class TestRateML():
     @pytest.mark.parametrize('model_name, language', itertools.product(["kuramoto"], ["cuda"]))
     def test_time_serie(self, model_name, language):
 
+        #First compile the model
+        assert compile_cuda_model(model_name)
+
+        sys.argv = sys.argv[1:]
         driver = Driver_Execute(Driver_Setup())
         tavg0 = driver.run_simulation()
         assert tavg0 is not None and len(tavg0) > 0
+        assert tavg0.shape == ()
 
-        driver.args.model = driver.args.model + 'ref'
+        driver.args.model = model_name + 'ref'
+        driver.set_CUDA_ref_model_dir()
         tavg1 = driver.run_simulation()
         assert tavg1 is not None and len(tavg1) > 0
 
-        result = np.corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1]
-        assert result == 1
+        assert np.corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1] == 1
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name, language', itertools.product(models, languages))
@@ -75,24 +111,14 @@ class TestRateML():
         model_str, driver_str = RateML(model_filename=model_name,language=language,XMLfolder=XMLModel_path,
                                        GENfolder=generatedModels_path).render()
         if language == "python":
-            assert len(model_str) >0 and len(driver_str) == 0
+            assert len(model_str) >0 and driver_str is None
         if language == "cuda":
-            assert len(model_str) >0 and len(driver_str) > 0
+            assert len(model_str) >0 and driver_str is not None and len(driver_str) > 0
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name', models)
     def test_compile_cuda_models(self, model_name):
-        source_file = os.path.join(generatedModels_path, model_name + ".c")
-        compiled = False
-        with open(source_file, 'r') as f:
-            mod_content = f.read().replace('M_PI_F', '%ff' % (np.pi,))
-
-            # Compile model
-            mod = SourceModule(mod_content, options=compiler_opts(), include_dirs=[], no_extern_c=True, keep=False)
-            assert mod is not None
-            compiled = True
-
-        assert compiled
+        assert compile_cuda_model(model_name)
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name', models)
@@ -152,4 +178,4 @@ class TestRateML():
         tavg_file.close()
         a, b, c, d = tavg_data.shape
         print(tavg_data.shape)
-        assert (a, b, c, d) == (4, 2, 68, 64)
+        assert (a, b, c, d) == (4, 2, 68, 16)
