@@ -25,7 +25,7 @@ __device__ float wrap_it_V(float V)
     return V;
 }
 
-__global__ void kuramoto(
+__global__ void kuramotoref(
 
         // config
         unsigned int i_step, unsigned int n_node, unsigned int nh, unsigned int n_step, unsigned int n_work_items,
@@ -110,7 +110,7 @@ __global__ void kuramoto(
                 //***// Get the state of node j which is delayed by dij
                 float V_j = state(((t - dij + nh) % nh), j_node + 0 * n_node);
 
-                // Sum it all together using the coupling function. Kuramoto coupling: (postsyn * presyn) == ((a) * (sin(xj - xi)))
+                // Sum it all together using the coupling function. Kuramoto coupling: (postsyn * presyn) == ((a) * (sin(xj - xi))) 
                 c_pop1 += wij * a * sin(V_j - V);
 
             } // j_node */

@@ -33,7 +33,7 @@ __device__ float wrap_it_V(float V)
     return V;
 }
 
-__global__ void montbrio(
+__global__ void montbrioref(
 
         // config
         unsigned int i_step, unsigned int n_node, unsigned int nh, unsigned int n_step, unsigned int n_work_items,

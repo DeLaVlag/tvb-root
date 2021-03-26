@@ -65,7 +65,7 @@ __device__ float wrap_it_g(float g)
     return g;
 }
 
-__global__ void epileptor(
+__global__ void epileptorref(
 
         // config
         unsigned int i_step, unsigned int n_node, unsigned int nh, unsigned int n_step, unsigned int n_work_items,
