@@ -1,3 +1,10 @@
+"""
+Test for RateML module
+
+.. moduleauthor:: Aaron Perez Martin <a.perez.martin@fz-juelich.de>
+
+"""
+
 import pytest, os, glob, itertools, numpy as np, re, argparse, subprocess, pickle
 from tvb.tests.library.base_testcase import BaseTestCase
 from tvb.rateML import XML2model
@@ -42,10 +49,13 @@ def compile_cuda_model(location, model_name):
     return compiled
 
 def check_input_params():
-    if len(sys.argv)>2:
+    if len(sys.argv)>=2:
         return sys.argv[1:]
     else:
         return sys.argv
+
+#This line avoid passing script name as a parameters
+check_input_params()
 class TestRateML():
     models=["epileptor", "kuramoto", "montbrio", "oscillator", "rwongwang"]
     python_mods = ["python"]*len(models)
