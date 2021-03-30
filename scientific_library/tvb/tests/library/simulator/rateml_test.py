@@ -50,9 +50,8 @@ def compile_cuda_model(location, model_name):
 
 def check_input_params():
     if len(sys.argv)>=2:
-        return sys.argv[1:]
-    else:
-        return sys.argv
+        sys.argv = sys.argv[1:]
+
 
 #This line avoid passing script name as a parameters
 check_input_params()
@@ -65,7 +64,6 @@ class TestRateML():
     #----------------
     @pytest.mark.slow
     def test_make_cuda_setup(self):
-        check_input_params()
         driver = Driver_Execute(Driver_Setup())
 
         bx, by = driver.args.blockszx, driver.args.blockszy
@@ -82,7 +80,7 @@ class TestRateML():
         n_times = 20
         data["serie"] = np.zeros(2, 'f')
 
-        check_input_params()
+
         driver = Driver_Execute(Driver_Setup())
         gpu_data = driver.make_gpu_data(data)
 
@@ -91,7 +89,6 @@ class TestRateML():
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name', ["kuramoto"])
     def test_make_cuda_kernel(self, model_name):
-        check_input_params()
         driver = Driver_Execute(Driver_Setup())
         file = os.path.join(XMLModel_path, xmlModelTesting+".c")
 
