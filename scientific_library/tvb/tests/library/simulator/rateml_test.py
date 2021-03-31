@@ -52,6 +52,15 @@ def check_input_params():
     if len(sys.argv)>=2:
         sys.argv = sys.argv[1:]
 
+def find_attributes(obj, pattern):
+    dict_found = {}
+    count = 0
+    for k,v in obj.__dict__.items():
+        if k.startswith(pattern):
+            dict_found[k] = v
+            count +=1
+    return dict_found, count
+
 #This line avoid passing script name as a parameters
 check_input_params()
 class TestRateML():
@@ -83,11 +92,11 @@ class TestRateML():
 
         assert gpu_data["serie"].size == data["serie"].size
 
-    def test_make_cuda_kernel(self, model_name):
+    def test_make_cuda_kernel(self):
         driver = Driver_Execute(Driver_Setup())
         step_fn = driver.make_kernel(source_file=driver.args.filename, warp_size=32, args=driver.args,
                            lineinfo=driver.args.lineinfo, nh=driver.buf_len)
-        assert step_fn is not None and len(step_fn)>0
+        assert step_fn is not None and len(str(step_fn))>0
 
     # Model Driver Section
     # --------------------
