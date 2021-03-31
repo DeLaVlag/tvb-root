@@ -52,7 +52,6 @@ def check_input_params():
     if len(sys.argv)>=2:
         sys.argv = sys.argv[1:]
 
-
 #This line avoid passing script name as a parameters
 check_input_params()
 class TestRateML():
@@ -62,7 +61,6 @@ class TestRateML():
 
     # Cuda Section
     #----------------
-    @pytest.mark.slow
     def test_make_cuda_setup(self):
         driver = Driver_Execute(Driver_Setup())
 
@@ -74,7 +72,6 @@ class TestRateML():
 
         assert gridx * gridy * bx * by >= nwi
 
-    @pytest.mark.slow
     def test_make_cuda_data(self):
         data = {}
         n_times = 20
@@ -86,31 +83,22 @@ class TestRateML():
 
         assert gpu_data["serie"].size == data["serie"].size
 
-    @pytest.mark.slow
-    @pytest.mark.parametrize('model_name', ["kuramoto"])
     def test_make_cuda_kernel(self, model_name):
         driver = Driver_Execute(Driver_Setup())
-        file = os.path.join(XMLModel_path, xmlModelTesting+".c")
-
-        step_fn = driver.make_kernel(source_file=file, warp_size=32, args=driver.args,
+        step_fn = driver.make_kernel(source_file=driver.args.filename, warp_size=32, args=driver.args,
                            lineinfo=driver.args.lineinfo, nh=driver.buf_len)
-        assert step_fn == 1
+        assert step_fn is not None and len(step_fn)>0
 
     # Model Driver Section
     # --------------------
-    @pytest.mark.slow
     def test_check_parameters(self):
-        dict = {}
-        dict = {"weights" : numpy.ones((number_of_regions, number_of_regions)),
-                "lengths" : 42. * copy(self.weights)}
+        driver = Driver_Execute(Driver_Setup())
+        _, count = find_attributes(driver.args, "n_sweep_")
+        assert count == 2
+        assert driver.exposures == 2 and driver.states == 2
 
-        n_inner_steps = int(self.tavg_period / self.dt)
-
-        tavg_period = 10.0
-        dt = 0.1
-        self.n_work_items, \
-        self.n_params
-
+        n_work_items, n_params = driver.params.shape
+        assert n_work_items == 16 and n_params == 2
 
     # Model Section
     # ----------------
@@ -144,24 +132,13 @@ class TestRateML():
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name, language', itertools.product(["kuramoto"], ["cuda"]))
     def test_time_serie(self, model_name, language):
-
-        #First compile the model
-        assert compile_cuda_model(location=generatedModels_path, model_name=model_name)
-
+        RateML(model_filename=model_name, language=language, XMLfolder=XMLModel_path,
+               GENfolder=generatedModels_path)  # .render()
         driver = Driver_Execute(Driver_Setup())
+        driver.args.n_time = 100
+        driver.args.verbose = True
         tavg0 = driver.run_simulation()
-        assert tavg0 is not None and len(tavg0) > 0
-
-        ref_model = model_name + 'ref'
-        assert compile_cuda_model(location=cuda_ref_path, model_name=ref_model)
-
-        driver.args.model = ref_model
-        #driver.set_CUDA_ref_model_dir()
-        driver.args.filename = os.path.join(cuda_ref_path, ref_model + ".c")
-        tavg1 = driver.run_simulation()
-        assert tavg1 is not None and len(tavg1) > 0
-
-        assert np.corrcoef(tavg0.ravel(), tavg1.ravel())[0, 1] == 1
+        assert pytest.approx(driver.compare_with_ref(tavg0), 0.00001) == 1
 
     @pytest.mark.slow
     @pytest.mark.parametrize('model_name, language', itertools.product(models, languages))
@@ -219,10 +196,7 @@ class TestRateML():
         out, err = process.communicate()
         assert len(out) == 0 and len(err) == 0
 
-        #n_coupling = 8
-        #n_speed = 8
         n_steps = 4
-        #total_data = n_coupling * n_speed
         path = os.path.join(run_path, "model_driver.py")
         cmd = "python " + path + " --model " + model_name + " -n " + str(n_steps) + " -w"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -237,5 +211,4 @@ class TestRateML():
         tavg_data = pickle.load(tavg_file)
         tavg_file.close()
         a, b, c, d = tavg_data.shape
-        print(tavg_data.shape)
         assert (a, b, c, d) == (4, 2, 68, 16)
