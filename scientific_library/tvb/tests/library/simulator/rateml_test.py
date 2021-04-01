@@ -176,21 +176,11 @@ class TestRateML():
             lines = lines.split("__global__ void bold_update")[0]
 
             pattern_model = r'^__global__ void ' + model_name + '\('
-            if len(re.findall(pattern=pattern_model, string=lines,
-                              flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)) <= 0:
-                print("Error", pattern_model, "did not found", model_name)
-                assert False
-            else:
-                assert True
+            assert len(re.findall(pattern=pattern_model, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)) >0
 
             for regex, mincount in dic_regex_mincount.items():
                 matches = re.findall(pattern=regex, string=lines, flags=re.IGNORECASE + re.MULTILINE + re.DOTALL)
-
-                if len(matches) < dic_regex_mincount[regex]:
-                    print("Error", regex, "found", len(matches), "of", mincount)
-                    assert False
-                else:
-                    assert True
+                assert len(matches) >= dic_regex_mincount[regex]
 
     # Simulation Section
     # ----------------
@@ -211,9 +201,6 @@ class TestRateML():
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    universal_newlines=True)
         out, err = process.communicate()
-
-        # Warnings are in sterr
-        print(err, '\n\n', out)
 
         # Reading the simulation data
         tavg_file = open('tavg_data', 'rb')
