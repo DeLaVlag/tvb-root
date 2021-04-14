@@ -18,7 +18,7 @@
 
 __device__ float wrap_it_r(float r)
 {
-    float rdim[] = {-0.0, 100.0};
+    float rdim[] = {-0.0, 10000.0};
     if (r < rdim[0]) r = rdim[0];
     else if (r > rdim[1]) r = rdim[1];
 
@@ -26,7 +26,7 @@ __device__ float wrap_it_r(float r)
 }
 __device__ float wrap_it_V(float V)
 {
-    float Vdim[] = {-100.0, 100.0};
+    float Vdim[] = {-10000.0, 10000.0};
     if (V < Vdim[0]) V = Vdim[0];
     else if (V > Vdim[1]) V = Vdim[1];
 
@@ -41,6 +41,9 @@ __global__ void montbrio(
         float * __restrict__ params_pwi, // pwi: per work item
         // state
         float * __restrict__ state_pwi,
+        // noise
+        float * __restrict__ noiser,
+        float * __restrict__ noiseV,
         // outputs
         float * __restrict__ tavg_pwi
         )
@@ -67,7 +70,7 @@ __global__ void montbrio(
     const float Delta = 0.7;
     const float J = 14.5;
     const float eta = -4.6;
-    const float Gamma = 5.0;
+//    const float Gamma = 5.0;
 
     // coupling constants, coupling itself is hardcoded in kernel
 
@@ -98,6 +101,7 @@ __global__ void montbrio(
 
     //***// This is the loop over time, should stay always the same
     for (unsigned int t = i_step; t < (i_step + n_step); t++)
+//    for (unsigned int t = 7674; t < (7674 + n_step); t++)
     {
     //***// This is the loop over nodes, which also should stay the same
         for (int i_node = 0; i_node < n_node; i_node++)
@@ -123,7 +127,7 @@ __global__ void montbrio(
                 //***// Get the state of node j which is delayed by dij
                 float V_j = state(((t - dij + nh) % nh), j_node + 0 * n_node);
 
-                // Sum it all together using the coupling function. Kuramoto coupling: (postsyn * presyn) == ((a) * (sin(xj - xi))) 
+                // Sum it all together using the coupling function. Kuramoto coupling: (postsyn * presyn) == ((a) * (sin(xj - xi)))
                 r_c += wij * 1 * V_j;
 
             } // j_node */
@@ -137,8 +141,9 @@ __global__ void montbrio(
             dV = dt * (1/tau * (powf(V, 2) - powf(M_PI_F, 2) * powf(tau, 2) * powf(r, 2) + eta + J * tau * r + I + r_c));
 
             // No noise is added because it is not present in model
-            r += dr;
-            V += dV;
+            r += dr + noiser[i_node, t%nh];
+//            printf("%d %d %f \n", i_node, t%nh, noiser[i_node, t%nh]);
+            V += dV + noiseV[i_node, t%nh];;
 
             // Wrap it within the limits of the model
             r = wrap_it_r(r);
@@ -150,6 +155,7 @@ __global__ void montbrio(
 
             // Update the observable only for the last timestep
             if (t == (i_step + n_step - 1)){
+//                printf("%d %f ", t, V);
                 tavg(i_node + 0 * n_node) = r;
                 tavg(i_node + 1 * n_node) = V;
             }
